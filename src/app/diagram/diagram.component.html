@@ -1,18 +1,27 @@
-<div #diagramRef class="w-100 h-100">
-    <div #propPanelRef class="propPanel"></div>
-    <div class="btn-group btn-group-01" role="group">
-        <button mat-raised-button color="primary" (click)="doLoad()"><mat-icon>folder</mat-icon></button>
-        <button mat-raised-button color="primary" (click)="doResetToBlank()"><mat-icon>note_add</mat-icon></button>
-        <div class="px-1"></div>
-        <button mat-raised-button color="primary" (click)="doSaveToServer()"><mat-icon>save</mat-icon></button>
-        <button mat-raised-button color="primary" (click)="doSaveAsFile()"><mat-icon>cloud_download</mat-icon></button>
+<div class="w-100 h-100 d-flex">
+    <div #diagramCompareRef class="{{ baseCompareEnabled?'visible':'hide' }} w-50 h-100 split-bar-right" style="position: relative;">
+        <div class="btn-group btn-group-01" role="group">
+            <button mat-raised-button color="primary" (click)="doLoadBase()" title="load base file"><mat-icon>folder</mat-icon></button>
+        </div>
     </div>
-    
-    <div class="btn-group btn-group-02" role="group">
-        <button mat-raised-button color="primary" (click)="doZoomFitContent()"><mat-icon>aspect_ratio</mat-icon></button>
-        <div class="px-1"></div>
-        <button mat-raised-button color="primary" (click)="doZoomIn()"><mat-icon>zoom_in</mat-icon></button>
-        <button mat-raised-button color="primary" (click)="doZoomOut()"><mat-icon>zoom_out</mat-icon></button>
+    <div #diagramRef class="{{ baseCompareEnabled?'w-50':'w-100' }} h-100" style="position: relative;">
+        <div #propPanelRef class="propPanel {{ baseCompareEnabled?'hide':'visible' }}"></div>
+        <div class="btn-group btn-group-01" role="group">
+            <button mat-raised-button color="primary" (click)="doResetToBlank()" title="create new"><mat-icon>note_add</mat-icon></button>
+            <button mat-raised-button color="primary" (click)="doLoad()" title="load existing file"><mat-icon>folder_open</mat-icon></button>
+            <div class="px-1"></div>
+            <button mat-raised-button color="primary" (click)="doSaveToServer()" title="save to cloud"><mat-icon>cloud_upload</mat-icon></button>
+            <button mat-raised-button color="primary" (click)="doSaveAsFile()" title="save to local"><mat-icon>cloud_download</mat-icon></button>
+            <div class="px-1"></div>
+            <button mat-raised-button color="primary" (click)="doToggleCompareBase()" title="toggle compare mode"><mat-icon>compare</mat-icon></button>
+        </div>
+        
+        <div class="btn-group btn-group-02" role="group">
+            <button mat-raised-button color="primary" (click)="doZoomFitContent()"><mat-icon>aspect_ratio</mat-icon></button>
+            <!-- <div class="px-1"></div>
+            <button mat-raised-button color="primary" (click)="doZoomIn()"><mat-icon>zoom_in</mat-icon></button>
+            <button mat-raised-button color="primary" (click)="doZoomOut()"><mat-icon>zoom_out</mat-icon></button> -->
+        </div>
     </div>
 </div>
 

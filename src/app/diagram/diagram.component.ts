@@ -22,16 +22,20 @@ import { map, switchMap } from 'rxjs/operators';
  * bpmn-modeler - bootstraps a full-fledged BPMN editor
  */
 //import * as BpmnJS from 'bpmn-js/dist/bpmn-modeler.production.min.js';
-import * as BpmnJS from 'bpmn-js/dist/bpmn-modeler.development.js';
+import * as BpmnJSModeler from 'bpmn-js/dist/bpmn-modeler.development.js';
+import * as BpmnJSViewer from 'bpmn-js/dist/bpmn-modeler.development.js';
 import BpmnColorPickerModule from 'bpmn-js-color-picker';
 import BpmnPropertiesPanelModule from 'bpmn-js-properties-panel'
 import BpmnPropertiesProviderModule from 'bpmn-js-properties-panel/lib/provider/bpmn'
 import BpmnTaskResizeableModule from 'bpmn-js-task-resize/lib'
 import BpmnJsCustomRendererModule from 'custom-modules/bpmn-js-custom-renderer'
+import { diff } from 'bpmn-js-differ';
+import BpmnModdle from 'bpmn-moddle';
 
 import * as $ from 'jquery';
 
 import { from, Observable, Subscription } from 'rxjs';
+import { LoadingScreenService } from '../services/loading-screen.service';
 
 declare const Window: any;
 const defaultBlankDiagram = `<?xml version="1.0" encoding="UTF-8"?>
@@ -69,11 +73,23 @@ const defaultBlankDiagram = `<?xml version="1.0" encoding="UTF-8"?>
         right: 5rem;
         z-index: 20000;
       }
+      .split-bar-right {
+        margin-right: 5px;
+        border-right: 5px solid gray;
+      }
+      .hide {
+        display: none;
+      }
+      .djs-palette.hide {
+        display: none;
+      }
     `
   ]
 })
 export class DiagramComponent implements AfterContentInit, OnChanges, OnDestroy {
-  private bpmnJS: any;
+  private bpmnJSModeller: any;
+  private bpmnJSBaseVerViewer: any = null;
+  private bpmnJSCrntVerViewer: any = null;
 
   @ViewChild('diagramRef', { static: true }) diagramContainerEl!: ElementRef;
   @ViewChild('propPanelRef', { static: true }) propPanelEl!: ElementRef;
@@ -82,10 +98,17 @@ export class DiagramComponent implements AfterContentInit, OnChanges, OnDestroy 
 
   downloadAncher = document.createElement("a");
   uploadInput = document.createElement("input");
+  uploadInput2 = document.createElement("input");
   filename = "filename.bpmn";
   searchText = "";
+  bpmnChanges = {}
+  currentBpmnXml:string|null = null;
+  baseBpmnXml:string|null = null;
+  baseCompareEnabled:boolean = false;
 
-  constructor(private http: HttpClient) {
+  constructor(
+    private http: HttpClient,
+    private loadingScreenService:LoadingScreenService) {
 
     this.uploadInput.type = "file";
     this.uploadInput.addEventListener('change', (event) => {
@@ -99,10 +122,22 @@ export class DiagramComponent implements AfterContentInit, OnChanges, OnDestroy 
         reader.readAsText(this.uploadInput.files[0]);
       }
     });
+    this.uploadInput2.type = "file";
+    this.uploadInput2.addEventListener('change', (event) => {
+      console.debug("uploadInput2 change");
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        let baseXml = event.target?.result;
+        this.doCompareDiagram(baseXml as string, this.currentBpmnXml as string)
+      }
+      if(this.uploadInput2?.files && this.uploadInput2?.files[0] != null) {
+        reader.readAsText(this.uploadInput2.files[0]);
+      }
+    });
     this.uploadInput.style.display = "none";
     this.downloadAncher.style.display = "none";
 
-    this.bpmnJS = new BpmnJS({
+    this.bpmnJSModeller = new BpmnJSModeler({
       // textRenderer: {
       //   defaultStyle: {
       //     fontSize: '16px',
@@ -122,13 +157,40 @@ export class DiagramComponent implements AfterContentInit, OnChanges, OnDestroy 
       eventResizingEnabled: true
     });
 
+    this.bpmnJSBaseVerViewer = new BpmnJSViewer();
+    this.bpmnJSCrntVerViewer = new BpmnJSViewer();
 
-    this.bpmnJS.on('import.done', (result:any) => {
+    this.bpmnJSModeller.on('import.parse.start', (event:any) => {
+      /*
+        event = {
+          xml: xml
+        }
+      */
+      console.log("import.parse.start");
+      this.loadingScreenService.showSpinner();
+    })
+    
+    this.bpmnJSModeller.on('import.parse.complete', (event:any) => {
+      /*
+        event = {
+          error: null,
+	        definitions: definitions,
+	        elementsById: elementsById,
+	        references: references,
+	        warnings: parseWarnings
+        }
+      */
+      this.bpmnJSCrntVerViewer.importDefinitions(event.definitions);
+
+    })
+
+    this.bpmnJSModeller.on('import.done', (result:any) => {
       console.log("import.done");
-      this.bpmnJS.get('canvas').zoom('fit-viewport');
+      this.loadingScreenService.stopSpinner();
+      this.bpmnJSModeller.get('canvas').zoom('fit-viewport');
       
       if (!result.error) {
-        this.bpmnJS.get('canvas').zoom('fit-viewport');
+        this.bpmnJSModeller.get('canvas').zoom('fit-viewport');
       } else {
         console.error(result.error);
       }
@@ -137,9 +199,8 @@ export class DiagramComponent implements AfterContentInit, OnChanges, OnDestroy 
 
   ngAfterContentInit(): void {
 
-    this.bpmnJS.attachTo(this.diagramContainerEl.nativeElement);
-
-    this.bpmnJS.get('keyboard').bind(document);
+    this.bpmnJSModeller.attachTo(this.diagramContainerEl.nativeElement);
+    this.bpmnJSModeller.get('keyboard').bind(document);
     
 
     // let overlays = this.bpmnJS.get('overlays');
@@ -152,7 +213,7 @@ export class DiagramComponent implements AfterContentInit, OnChanges, OnDestroy 
     //   html: exportBtn
     // });
 
-    let propertiesPanel = this.bpmnJS.get('propertiesPanel');
+    let propertiesPanel = this.bpmnJSModeller.get('propertiesPanel');
     propertiesPanel?.detach();
     propertiesPanel?.attachTo(this.propPanelEl.nativeElement);
   }
@@ -169,8 +230,8 @@ export class DiagramComponent implements AfterContentInit, OnChanges, OnDestroy 
   }
 
   ngOnDestroy(): void {
-    this.bpmnJS.get('keyboard').unbind();
-    this.bpmnJS.destroy();
+    this.bpmnJSModeller.get('keyboard').unbind();
+    this.bpmnJSModeller.destroy();
   }
 
   /**
@@ -208,7 +269,18 @@ export class DiagramComponent implements AfterContentInit, OnChanges, OnDestroy 
    */
   private importDiagram(xml: string): Observable<{warnings: Array<any>}> {
     console.debug("importDiagram");
-    return from(this.bpmnJS.importXML(xml) as Promise<{warnings: Array<any>}>);
+    this.currentBpmnXml = xml;
+    return from(this.bpmnJSModeller.importXML(this.currentBpmnXml) as Promise<{warnings: Array<any>}>);
+  }
+  private doCompareDiagram(baseXml: string, newXml:string) {
+
+    
+    const baseBpmnDefs = new BpmnModdle().fromXML(baseXml);
+    const currentBpmnDefs = new BpmnModdle().fromXML(newXml);
+
+    this.bpmnChanges = diff(baseBpmnDefs.__zone_symbol__value.rootElement, currentBpmnDefs.__zone_symbol__value.rootElement);
+    console.log("bpmnChanges :: ", this.bpmnChanges);
+
   }
 
   validateFileName() {
@@ -219,11 +291,15 @@ export class DiagramComponent implements AfterContentInit, OnChanges, OnDestroy 
   doLoad() {
     this.uploadInput.click();
   }
+  doLoadBase() {
+    this.uploadInput2.value = "";
+    this.uploadInput2.click();
+  }
   doSaveToServer() {
     window.alert("save to server doesn't support yet");
   }
   doSaveAsFile() {
-    this.bpmnJS.saveXML({ format: true }, (err:any, xml:any) => {
+    this.bpmnJSModeller.saveXML({ format: true }, (err:any, xml:any) => {
       
       this._doSaveAsFile(new Blob([xml], {type: "text/xml"}));
     });
@@ -239,7 +315,7 @@ export class DiagramComponent implements AfterContentInit, OnChanges, OnDestroy 
     }
   }
   doDownload() {
-    this.bpmnJS.saveXML({ format: true }, (err:any, xml:any) => {
+    this.bpmnJSModeller.saveXML({ format: true }, (err:any, xml:any) => {
       let blob = new Blob([xml], {type: "text/xml"});
       this._doDownload(blob);
     });
@@ -251,7 +327,7 @@ export class DiagramComponent implements AfterContentInit, OnChanges, OnDestroy 
     this.downloadAncher.click();
   }
   doSearch() {
-    let result = this.bpmnJS.find(this.searchText);
+    let result = this.bpmnJSModeller.find(this.searchText);
     console.log("search result", result);
   }
   doZoomIn() {
@@ -261,11 +337,41 @@ export class DiagramComponent implements AfterContentInit, OnChanges, OnDestroy 
     window.alert("doesn't support yet");
   }
   doZoomFitContent() {
-    this.bpmnJS.get('canvas').zoom('fit-viewport');
+    this.bpmnJSModeller.get('canvas').zoom('fit-viewport');
   }
 
   doResetToBlank() {
     this.importDiagram(defaultBlankDiagram);
+  }
+  doToggleCompareBase() {
+    console.debug("doToggleCompareBase");
+    this.baseCompareEnabled = !this.baseCompareEnabled;
+    
+    if(this.baseCompareEnabled) {
+
+      this.bpmnJSModeller.detach()
+      this.bpmnJSCrntVerViewer.attachTo(this.diagramContainerEl.nativeElement);
+
+      let palette2 = this.bpmnJSCrntVerViewer.get('palette');
+      //palette2.close();
+      //(palette2._container as HTMLElement).classList.add('hide');
+      (palette2._container as HTMLElement).style.display = "none";
+
+      
+      this.bpmnJSCrntVerViewer.importDefinitions(this.bpmnJSModeller.getDefinitions());
+
+    } else {
+      this.bpmnJSCrntVerViewer.detach();
+      this.bpmnJSModeller.attachTo(this.diagramContainerEl.nativeElement);
+
+      //show palette after attach
+      let palette = this.bpmnJSModeller.get('palette');
+      palette.open();
+
+      // (palette._container as HTMLElement).classList.remove('hide');
+      // console.log("palette._container", palette._container);
+    }
+    
   }
 
 }
