@@ -1,0 +1,16 @@
+.diagram-parent {
+    --height: 400px;
+    height: calc(100vh - 30px);
+    border: solid 3px #EEE;
+    position: relative;
+  }
+  
+  .import-error {
+    color: red;
+    padding: 20px;
+  
+    position: absolute;
+    top: 0;
+    left: 0;
+  }
+  

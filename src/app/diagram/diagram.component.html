@@ -1,0 +1,20 @@
+<div #diagramRef class="w-100 h-100">
+    <div #propPanelRef class="propPanel"></div>
+    <div class="btn-group btn-group-01" role="group">
+        <button mat-raised-button color="primary" (click)="doLoad()"><mat-icon>folder</mat-icon></button>
+        <button mat-raised-button color="primary" (click)="doResetToBlank()"><mat-icon>note_add</mat-icon></button>
+        <div class="px-1"></div>
+        <button mat-raised-button color="primary" (click)="doSaveToServer()"><mat-icon>save</mat-icon></button>
+        <button mat-raised-button color="primary" (click)="doSaveAsFile()"><mat-icon>cloud_download</mat-icon></button>
+    </div>
+    
+    <div class="btn-group btn-group-02" role="group">
+        <button mat-raised-button color="primary" (click)="doZoomFitContent()"><mat-icon>aspect_ratio</mat-icon></button>
+        <div class="px-1"></div>
+        <button mat-raised-button color="primary" (click)="doZoomIn()"><mat-icon>zoom_in</mat-icon></button>
+        <button mat-raised-button color="primary" (click)="doZoomOut()"><mat-icon>zoom_out</mat-icon></button>
+    </div>
+</div>
+
+<input [(ngModel)]="filename" (blur)="validateFileName()" type="text"><button (click)="doSaveAsFile()">save</button>
+<input [(ngModel)]="searchText" type="text"><button (click)="doSearch()">search</button>
