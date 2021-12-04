@@ -75,13 +75,32 @@ const defaultBlankDiagram = `<?xml version="1.0" encoding="UTF-8"?>
       }
       .split-bar-right {
         margin-right: 5px;
-        border-right: 5px solid gray;
+        border-right: 5px solid #3f51b5;
       }
       .hide {
         display: none;
       }
       .djs-palette.hide {
         display: none;
+      }
+      .top-center {
+        position: absolute;
+        top: 0;
+        left: 50%;
+        transform: translate(-50%, 0)
+      }
+      .panel {
+        background: lightgray;
+      }
+      .changed-items-container {
+        max-height: 200px;
+        overflow-y: auto;
+      }
+      .changed-items-container table {
+        background: white;
+      }
+      .changed-items-container td {
+        border: 1px solid black;
       }
     `
   ]
@@ -91,6 +110,8 @@ export class DiagramComponent implements AfterContentInit, OnChanges, OnDestroy 
   private bpmnJSBaseVerViewer: any = null;
   private bpmnJSCrntVerViewer: any = null;
 
+  
+  @ViewChild('diagramBaseCompareRef', { static: true }) diagramBaseCompareContainerEl!: ElementRef;
   @ViewChild('diagramRef', { static: true }) diagramContainerEl!: ElementRef;
   @ViewChild('propPanelRef', { static: true }) propPanelEl!: ElementRef;
   @Output() importDone: EventEmitter<any> = new EventEmitter();
@@ -105,6 +126,7 @@ export class DiagramComponent implements AfterContentInit, OnChanges, OnDestroy 
   currentBpmnXml:string|null = null;
   baseBpmnXml:string|null = null;
   baseCompareEnabled:boolean = false;
+  showListOfChangedElements:boolean = false;
 
   constructor(
     private http: HttpClient,
@@ -128,7 +150,11 @@ export class DiagramComponent implements AfterContentInit, OnChanges, OnDestroy 
       const reader = new FileReader();
       reader.onload = (event) => {
         let baseXml = event.target?.result;
-        this.doCompareDiagram(baseXml as string, this.currentBpmnXml as string)
+        this.bpmnJSBaseVerViewer.importXML(baseXml).then((event:any) => {
+          console.debug("bpmnJSBaseVerViewer.importXML", event);
+          this.doCompareDiagram()
+        });
+        
       }
       if(this.uploadInput2?.files && this.uploadInput2?.files[0] != null) {
         reader.readAsText(this.uploadInput2.files[0]);
@@ -272,15 +298,17 @@ export class DiagramComponent implements AfterContentInit, OnChanges, OnDestroy 
     this.currentBpmnXml = xml;
     return from(this.bpmnJSModeller.importXML(this.currentBpmnXml) as Promise<{warnings: Array<any>}>);
   }
-  private doCompareDiagram(baseXml: string, newXml:string) {
+  private doCompareDiagram() {
 
-    
-    const baseBpmnDefs = new BpmnModdle().fromXML(baseXml);
-    const currentBpmnDefs = new BpmnModdle().fromXML(newXml);
+    this.bpmnJSBaseVerViewer.saveXML({}, (err:any, baseXml:any) => {
+      this.bpmnJSCrntVerViewer.saveXML({}, (err:any, newXml:any) => {
+        const baseBpmnDefs = new BpmnModdle().fromXML(baseXml);
+        const currentBpmnDefs = new BpmnModdle().fromXML(newXml);
 
-    this.bpmnChanges = diff(baseBpmnDefs.__zone_symbol__value.rootElement, currentBpmnDefs.__zone_symbol__value.rootElement);
-    console.log("bpmnChanges :: ", this.bpmnChanges);
-
+        this.bpmnChanges = diff(baseBpmnDefs.__zone_symbol__value.rootElement, currentBpmnDefs.__zone_symbol__value.rootElement);
+        console.log("bpmnChanges :: ", this.bpmnChanges);
+      })
+    })
   }
 
   validateFileName() {
@@ -336,8 +364,12 @@ export class DiagramComponent implements AfterContentInit, OnChanges, OnDestroy 
   doZoomOut() {
     window.alert("doesn't support yet");
   }
+  doZoomFitBaseContent() {
+    this.bpmnJSBaseVerViewer.get('canvas').zoom('fit-viewport');
+  }
   doZoomFitContent() {
     this.bpmnJSModeller.get('canvas').zoom('fit-viewport');
+    this.bpmnJSCrntVerViewer.get('canvas').zoom('fit-viewport');
   }
 
   doResetToBlank() {
@@ -351,6 +383,8 @@ export class DiagramComponent implements AfterContentInit, OnChanges, OnDestroy 
 
       this.bpmnJSModeller.detach()
       this.bpmnJSCrntVerViewer.attachTo(this.diagramContainerEl.nativeElement);
+      this.bpmnJSBaseVerViewer.attachTo(this.diagramBaseCompareContainerEl.nativeElement);
+      
 
       let palette2 = this.bpmnJSCrntVerViewer.get('palette');
       //palette2.close();
@@ -361,6 +395,7 @@ export class DiagramComponent implements AfterContentInit, OnChanges, OnDestroy 
       this.bpmnJSCrntVerViewer.importDefinitions(this.bpmnJSModeller.getDefinitions());
 
     } else {
+      this.bpmnJSBaseVerViewer.detach();
       this.bpmnJSCrntVerViewer.detach();
       this.bpmnJSModeller.attachTo(this.diagramContainerEl.nativeElement);
 
@@ -374,4 +409,8 @@ export class DiagramComponent implements AfterContentInit, OnChanges, OnDestroy 
     
   }
 
+
+  doToggleListOfChangedElements() {
+    this.showListOfChangedElements = !this.showListOfChangedElements;
+  }
 }
