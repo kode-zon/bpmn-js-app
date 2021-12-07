@@ -146,7 +146,6 @@ export class DiagramComponent implements AfterContentInit, OnChanges, OnDestroy 
         this.importDiagram(xml as string)
       }
       if(this.uploadInput?.files && this.uploadInput?.files[0] != null) {
-        this.loadingScreenService.showSpinner();
         reader.readAsText(this.uploadInput.files[0]);
       }
     });
@@ -163,7 +162,6 @@ export class DiagramComponent implements AfterContentInit, OnChanges, OnDestroy 
         
       }
       if(this.uploadInput2?.files && this.uploadInput2?.files[0] != null) {
-        this.loadingScreenService.showSpinner();
         reader.readAsText(this.uploadInput2.files[0]);
       }
     });
@@ -191,7 +189,13 @@ export class DiagramComponent implements AfterContentInit, OnChanges, OnDestroy 
     });
 
     this.bpmnJSBaseVerViewer = new BpmnJSViewer();
-    this.bpmnJSCrntVerViewer = new BpmnJSViewer();
+    this.bpmnJSCrntVerViewer = new BpmnJSViewer({
+      height: "100%",
+      width: "100%",
+      canvas: {
+        deferUpdate: false
+      }
+    });
 
     // this.hilightingModelElementId.subscribe((newValue) => {
     //   if(newValue == null) {
@@ -216,6 +220,7 @@ export class DiagramComponent implements AfterContentInit, OnChanges, OnDestroy 
           xml: xml
         }
       */
+      this.loadingScreenService.showSpinner();
       console.log("import.parse.start");
     })
     
@@ -235,7 +240,6 @@ export class DiagramComponent implements AfterContentInit, OnChanges, OnDestroy 
 
     this.bpmnJSModeller.on('import.done', (result:any) => {
       console.log("import.done");
-      this.loadingScreenService.stopSpinner();
       this.bpmnJSModeller.get('canvas').zoom('fit-viewport');
       
       if (!result.error) {
@@ -243,6 +247,7 @@ export class DiagramComponent implements AfterContentInit, OnChanges, OnDestroy 
       } else {
         console.error(result.error);
       }
+      this.loadingScreenService.stopSpinner();
     });
 
     this.bpmnJSModeller.on('selection.changed', (event: { oldSelection: any[], newSelection: any[] } ) => {
@@ -318,19 +323,34 @@ export class DiagramComponent implements AfterContentInit, OnChanges, OnDestroy 
       }
     })
 
+    this.bpmnJSBaseVerViewer.on('import.parse.start', (event:any) => {
+      this.loadingScreenService.showSpinner();
+    });
+    this.bpmnJSBaseVerViewer.on('import.done', (result:any) => {
+      this.loadingScreenService.stopSpinner();
+    });
 
-    let eventBusCrnt = this.bpmnJSCrntVerViewer.get('eventBus');
-    let eventBusBase = this.bpmnJSBaseVerViewer.get('eventBus');
+    this.bpmnJSCrntVerViewer.on('import.parse.start', (event:any) => {
+      this.loadingScreenService.showSpinner();
+    });
+    this.bpmnJSCrntVerViewer.on('import.done', (result:any) => {
+      this.loadingScreenService.stopSpinner();
+    });
 
-    eventBusCrnt.on('canvas.viewbox.changed', (event:any) => {
-      console.log("bpmnJSCrntVerViewer  canvas.viewbox.changed");
-      let canvasCrnt = this.bpmnJSCrntVerViewer.get("canvas");
-      let canvasBase = this.bpmnJSBaseVerViewer.get("canvas");
-      canvasBase.viewbox(canvasCrnt.viewbox());
-    })
-    eventBusBase.on('canvas.viewbox.changed', (event:any) => {
-      console.log("bpmnJSBaseVerViewer  canvas.viewbox.changed");
-    })
+
+    function syncViewbox(a:any, b:any) {
+
+      var syncing = false;
+      a.on('canvas.viewbox.changed', (event:any) => {
+        if(syncing) return;
+
+        syncing = true;
+        b.get("canvas").viewbox(event.viewbox);
+        syncing = false;
+      });
+    }
+    syncViewbox(this.bpmnJSCrntVerViewer, this.bpmnJSBaseVerViewer);
+    syncViewbox(this.bpmnJSBaseVerViewer, this.bpmnJSCrntVerViewer);
   }
 
   get hilightingComparingElementId():string[] {
@@ -580,6 +600,22 @@ export class DiagramComponent implements AfterContentInit, OnChanges, OnDestroy 
       this.bpmnJSModeller.detach()
       this.bpmnJSCrntVerViewer.attachTo(this.diagramContainerEl.nativeElement);
       this.bpmnJSBaseVerViewer.attachTo(this.diagramBaseCompareContainerEl.nativeElement);
+      // let bpmnJSCrntCanvas = this.bpmnJSCrntVerViewer.get("canvas");
+      // let bpmnJSBaseCanvas = this.bpmnJSCrntVerViewer.get("canvas");
+      // //bpmnJSCrntCanvas.config.deferUpdate = false;
+      // let syncing = false;
+
+      // function makeCanvasSync(canvasA:any, canvasB:any) {
+      //   canvasA._viewboxChanged = (event:any) => {
+      //     if(!syncing) {
+      //       syncing = true;
+      //       canvasB.viewbox(canvasA.viewbox());
+      //       syncing = false;
+      //     }
+      //   }
+      // };
+      // makeCanvasSync(bpmnJSCrntCanvas, bpmnJSBaseCanvas);
+      // makeCanvasSync(bpmnJSBaseCanvas, bpmnJSCrntCanvas);
       
 
       let palette1 = this.bpmnJSCrntVerViewer.get('palette');
