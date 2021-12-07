@@ -14,3 +14,15 @@ $my-theme: mat.define-light-theme((
 ));
 
 @include mat.all-component-themes($my-theme);
+
+.hide {
+  display: none;
+}
+
+.djs-element.djsx-hilight .djs-outline {
+  stroke: orange;
+  stroke-width: 3px;
+  stroke-dasharray: 5;
+  fill-opacity: 0.2;
+  fill: orange !important;
+}

@@ -34,7 +34,7 @@ import BpmnModdle from 'bpmn-moddle';
 
 import * as $ from 'jquery';
 
-import { from, Observable, Subscription } from 'rxjs';
+import { BehaviorSubject, from, Observable, Subscription } from 'rxjs';
 import { LoadingScreenService } from '../services/loading-screen.service';
 
 declare const Window: any;
@@ -110,6 +110,9 @@ export class DiagramComponent implements AfterContentInit, OnChanges, OnDestroy 
   private bpmnJSBaseVerViewer: any = null;
   private bpmnJSCrntVerViewer: any = null;
 
+  private static MARKER_HILIGHT = 'djsx-hilight';
+  private static MARKER_SELECTED = 'selected';
+
   
   @ViewChild('diagramBaseCompareRef', { static: true }) diagramBaseCompareContainerEl!: ElementRef;
   @ViewChild('diagramRef', { static: true }) diagramContainerEl!: ElementRef;
@@ -127,6 +130,8 @@ export class DiagramComponent implements AfterContentInit, OnChanges, OnDestroy 
   baseBpmnXml:string|null = null;
   baseCompareEnabled:boolean = false;
   showListOfChangedElements:boolean = false;
+  _hilightingComparingElementId:string[] = [];
+  _hilightingModelingElementId:string[] = [];
 
   constructor(
     private http: HttpClient,
@@ -141,6 +146,7 @@ export class DiagramComponent implements AfterContentInit, OnChanges, OnDestroy 
         this.importDiagram(xml as string)
       }
       if(this.uploadInput?.files && this.uploadInput?.files[0] != null) {
+        this.loadingScreenService.showSpinner();
         reader.readAsText(this.uploadInput.files[0]);
       }
     });
@@ -157,6 +163,7 @@ export class DiagramComponent implements AfterContentInit, OnChanges, OnDestroy 
         
       }
       if(this.uploadInput2?.files && this.uploadInput2?.files[0] != null) {
+        this.loadingScreenService.showSpinner();
         reader.readAsText(this.uploadInput2.files[0]);
       }
     });
@@ -186,6 +193,23 @@ export class DiagramComponent implements AfterContentInit, OnChanges, OnDestroy 
     this.bpmnJSBaseVerViewer = new BpmnJSViewer();
     this.bpmnJSCrntVerViewer = new BpmnJSViewer();
 
+    // this.hilightingModelElementId.subscribe((newValue) => {
+    //   if(newValue == null) {
+    //     let canvasCrnt = this.bpmnJSCrntVerViewer.get("canvas");
+    //     let canvasBase = this.bpmnJSBaseVerViewer.get("canvas");
+
+    //     let elementRegistryCrnt = this.bpmnJSCrntVerViewer.get("elementRegistry");
+    //     let elementRegistryBase = this.bpmnJSBaseVerViewer.get("elementRegistry");
+
+    //     elementRegistryCrnt.getAll().forEach((elementItem:any) => {
+    //       canvasCrnt.removeMarker(elementItem.id, DiagramComponent.MARKER_HILIGHT)
+    //     });
+    //     elementRegistryBase.getAll().forEach((elementItem:any) => {
+    //       canvasBase.removeMarker(elementItem.id, DiagramComponent.MARKER_HILIGHT)
+    //     });
+    //   }
+    // })
+
     this.bpmnJSModeller.on('import.parse.start', (event:any) => {
       /*
         event = {
@@ -193,7 +217,6 @@ export class DiagramComponent implements AfterContentInit, OnChanges, OnDestroy 
         }
       */
       console.log("import.parse.start");
-      this.loadingScreenService.showSpinner();
     })
     
     this.bpmnJSModeller.on('import.parse.complete', (event:any) => {
@@ -221,7 +244,180 @@ export class DiagramComponent implements AfterContentInit, OnChanges, OnDestroy 
         console.error(result.error);
       }
     });
+
+    this.bpmnJSModeller.on('selection.changed', (event: { oldSelection: any[], newSelection: any[] } ) => {
+      /**
+       * event = { oldSelection: oldSelection, newSelection: selectedElements }
+       * 
+       * selectedElements is array if element id
+       */
+
+      let canvasModeler = this.bpmnJSModeller.get("canvas");
+      let elementRegistryModeler = this.bpmnJSModeller.get("elementRegistry");
+
+      console.debug("selection.changed");
+
+      let selectingDefinitionRefIds:{ 
+        definitionKey: string, // signalRef, messageRef, blablaRef
+        refId?:string,
+      }[] = [];
+      let hilightElementIds:string[] = [];
+
+      // collect msgRefId from selected element (if exists).
+      event.newSelection.forEach(element => {
+        let eventDefinition = element?.businessObject?.eventDefinitions
+
+        if(eventDefinition != null) {
+
+          eventDefinition.forEach((msgDefinition:any/*bpmn-js ModdleElement*/) => {
+            let msgRefId = msgDefinition.messageRef?.id;
+            let signalRefId = msgDefinition.signalRef?.id;
+            let linkName = msgDefinition.name;
+            if(msgRefId != null) {
+              selectingDefinitionRefIds.push({ definitionKey:"messageRef", refId:msgRefId });
+            }
+            if(signalRefId != null) {
+              selectingDefinitionRefIds.push({ definitionKey:"signalRef", refId:signalRefId });
+            }
+            if(linkName != null) {
+              selectingDefinitionRefIds.push({ definitionKey:"name", refId:linkName });
+            }
+          });
+        }
+      });
+
+      if(selectingDefinitionRefIds.length > 0) {
+        // scan for all element that have target msgRefId
+        elementRegistryModeler.getAll().forEach((elementItem:any) => {
+
+          let eventDefinition = elementItem?.businessObject?.eventDefinitions
+          if(eventDefinition != null) {
+            eventDefinition.forEach((msgDefinition:any/*bpmn-js ModdleElement*/) => {
+              let foundAtIndex = selectingDefinitionRefIds.findIndex(selectingDefRefId => {
+                if(selectingDefRefId.definitionKey === 'name') {
+                  if(msgDefinition['name'] === selectingDefRefId.refId) {
+                    return true;
+                  }
+                } else {
+                  if(msgDefinition[selectingDefRefId.definitionKey]?.id === selectingDefRefId.refId) {
+                    return true;
+                  }
+                }
+                return false;
+              });
+
+              if(foundAtIndex >= 0) {
+                hilightElementIds.push(elementItem.id);
+              }
+            })
+          }
+        });
+        this.hilightingModelingElementId = hilightElementIds;
+      } else {
+        this.hilightingModelingElementId = [];
+      }
+    })
+
+
+    let eventBusCrnt = this.bpmnJSCrntVerViewer.get('eventBus');
+    let eventBusBase = this.bpmnJSBaseVerViewer.get('eventBus');
+
+    eventBusCrnt.on('canvas.viewbox.changed', (event:any) => {
+      console.log("bpmnJSCrntVerViewer  canvas.viewbox.changed");
+      let canvasCrnt = this.bpmnJSCrntVerViewer.get("canvas");
+      let canvasBase = this.bpmnJSBaseVerViewer.get("canvas");
+      canvasBase.viewbox(canvasCrnt.viewbox());
+    })
+    eventBusBase.on('canvas.viewbox.changed', (event:any) => {
+      console.log("bpmnJSBaseVerViewer  canvas.viewbox.changed");
+    })
   }
+
+  get hilightingComparingElementId():string[] {
+    return this._hilightingComparingElementId;
+  }
+  set hilightingComparingElementId(newValues:string[]) {
+    const oldHilightIds = this._hilightingComparingElementId;
+    this._hilightingComparingElementId = newValues;
+
+
+    let canvasCrnt = this.bpmnJSCrntVerViewer.get("canvas");
+    let canvasBase = this.bpmnJSBaseVerViewer.get("canvas");
+
+    let elementRegistryCrnt = this.bpmnJSCrntVerViewer.get("elementRegistry");
+    let elementRegistryBase = this.bpmnJSBaseVerViewer.get("elementRegistry");
+
+    if(newValues == null) {
+      elementRegistryCrnt.getAll().forEach((elementItem:any) => {
+        canvasCrnt.removeMarker(elementItem.id, DiagramComponent.MARKER_SELECTED)
+        canvasCrnt.removeMarker(elementItem.id, DiagramComponent.MARKER_HILIGHT)
+      });
+      elementRegistryBase.getAll().forEach((elementItem:any) => {
+        canvasBase.removeMarker(elementItem.id, DiagramComponent.MARKER_SELECTED)
+        canvasBase.removeMarker(elementItem.id, DiagramComponent.MARKER_HILIGHT)
+      });
+    } else {
+      if(oldHilightIds != null) {
+        oldHilightIds.forEach(oldHilightId => {
+          canvasCrnt.removeMarker(oldHilightId, DiagramComponent.MARKER_SELECTED);
+          canvasBase.removeMarker(oldHilightId, DiagramComponent.MARKER_SELECTED);
+          canvasCrnt.removeMarker(oldHilightId, DiagramComponent.MARKER_HILIGHT);
+          canvasBase.removeMarker(oldHilightId, DiagramComponent.MARKER_HILIGHT);
+        })
+      }
+      
+      if(newValues) {
+        newValues.forEach(newvalueItem => {
+
+          canvasCrnt.addMarker(newvalueItem, DiagramComponent.MARKER_SELECTED);
+          canvasBase.addMarker(newvalueItem, DiagramComponent.MARKER_SELECTED);
+          canvasCrnt.addMarker(newvalueItem, DiagramComponent.MARKER_HILIGHT);
+          canvasBase.addMarker(newvalueItem, DiagramComponent.MARKER_HILIGHT);
+        })
+      }
+    }
+  }
+
+  
+  get hilightingModelingElementId():string[] {
+    return this._hilightingModelingElementId;
+  }
+  
+  set hilightingModelingElementId(newValues:string[]) {
+    const oldHilightIds = this._hilightingModelingElementId?.slice();
+    this._hilightingModelingElementId = newValues;
+
+
+    let canvas = this.bpmnJSModeller.get("canvas");
+    let elementRegistry = this.bpmnJSModeller.get("elementRegistry");
+
+    // if(newValues == null) {
+    //   elementRegistry.getAll().forEach((elementItem:any) => {
+    //     canvas.removeMarker(elementItem.id, DiagramComponent.MARKER_SELECTED)
+    //     canvas.removeMarker(elementItem.id, DiagramComponent.MARKER_HILIGHT)
+    //   });
+    // } else 
+    {
+
+      if(oldHilightIds.length > 0) {
+        oldHilightIds.forEach(oldHilightId => {
+          canvas.removeMarker(oldHilightId, DiagramComponent.MARKER_SELECTED);
+          canvas.removeMarker(oldHilightId, DiagramComponent.MARKER_HILIGHT);
+        })
+      }
+      
+      if(newValues) {
+        newValues.forEach(newvalueItem => {
+          canvas.addMarker(newvalueItem, DiagramComponent.MARKER_SELECTED);
+          canvas.addMarker(newvalueItem, DiagramComponent.MARKER_HILIGHT);
+        })
+      }
+    }
+
+  }
+  
+
+
 
   ngAfterContentInit(): void {
 
@@ -386,9 +582,11 @@ export class DiagramComponent implements AfterContentInit, OnChanges, OnDestroy 
       this.bpmnJSBaseVerViewer.attachTo(this.diagramBaseCompareContainerEl.nativeElement);
       
 
-      let palette2 = this.bpmnJSCrntVerViewer.get('palette');
+      let palette1 = this.bpmnJSCrntVerViewer.get('palette');
+      let palette2 = this.bpmnJSBaseVerViewer.get('palette');
       //palette2.close();
       //(palette2._container as HTMLElement).classList.add('hide');
+      (palette1._container as HTMLElement).style.display = "none";
       (palette2._container as HTMLElement).style.display = "none";
 
       
@@ -409,8 +607,50 @@ export class DiagramComponent implements AfterContentInit, OnChanges, OnDestroy 
     
   }
 
-
   doToggleListOfChangedElements() {
     this.showListOfChangedElements = !this.showListOfChangedElements;
   }
+
+  doFocusElementModel(changeType:any, modelElement:any) {
+    console.debug("doFocusElementModel");
+
+    let canvasCrnt = this.bpmnJSCrntVerViewer.get("canvas");
+    let canvasBase = this.bpmnJSBaseVerViewer.get("canvas");
+
+    let elementRegistryCrnt = this.bpmnJSCrntVerViewer.get("elementRegistry");
+    let elementRegistryBase = this.bpmnJSBaseVerViewer.get("elementRegistry");
+    
+    let elementId = (modelElement.id)?modelElement.id:modelElement.model.id;
+
+    let shapeElm = elementRegistryCrnt.get(elementId);
+
+    let viewBoxCrnt = canvasCrnt.viewbox();
+    let newViewBox = {
+      x: (shapeElm.x + shapeElm.width/2) - viewBoxCrnt.outer.width / 2,
+      y: (shapeElm.y + shapeElm.height/2) - viewBoxCrnt.outer.height / 2,
+      width: viewBoxCrnt.outer.width,
+      height: viewBoxCrnt.outer.height,
+    }
+    const zoomMarginSpace = 50;
+    let diffWidth = viewBoxCrnt.outer.width/(shapeElm.width + zoomMarginSpace);
+    let diffHeight = viewBoxCrnt.outer.height/(shapeElm.height + zoomMarginSpace);
+
+    let minRatio = Math.min(diffWidth,diffHeight)
+
+    canvasBase.viewbox(newViewBox);
+    canvasCrnt.viewbox(newViewBox);
+    if(minRatio < 1) {
+      canvasCrnt.zoom(minRatio);
+      canvasBase.zoom(minRatio);
+    } else {
+      canvasCrnt.zoom(viewBoxCrnt.scale);
+      canvasBase.zoom(viewBoxCrnt.scale);
+    }
+
+    this.hilightingComparingElementId = [elementId];
+  }
+
+  // private doHilightModelElement(targetCanvas, shapeElm) {
+  //   let overlay = targetCanvas.get("overlay");
+  // }
 }

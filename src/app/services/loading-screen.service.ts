@@ -22,6 +22,7 @@ export class LoadingScreenService {
   ) { }
 
   public showSpinner() {
+    console.debug("showSpinner");
     if (this.numberOfShowingSprinner === 0) {
       this.spinnerTop.attach(new ComponentPortal(MatSpinner));
     }
@@ -29,8 +30,14 @@ export class LoadingScreenService {
     this.numberOfShowingSprinner++;
   }
 
-  public stopSpinner() {
-    this.numberOfShowingSprinner--;
+  public stopSpinner(all?:boolean) {
+    console.debug("stopSpinner");
+    if(this.numberOfShowingSprinner > 0) {
+      this.numberOfShowingSprinner--;
+    }
+    if(all) {
+      this.numberOfShowingSprinner = 0;
+    }
     if(this.numberOfShowingSprinner === 0){
       this.spinnerTop.detach();
     }

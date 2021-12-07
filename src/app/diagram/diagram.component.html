@@ -35,7 +35,7 @@
                 <ng-container *ngFor="let changeEntity of bpmnChanges | keyvalue">
                     <ng-container *ngFor="let modelElement of changeEntity.value | keyvalue">
                         <!-- model.bpmnElement.id -->
-                        <tr>
+                        <tr (click)="doFocusElementModel(changeEntity.key, modelElement.value)">
                             <td>{{ changeEntity.key }}</td>
                             <td>{{ modelElement.key }}</td>
                             <td>{{ modelElement.value | json }}</td>
