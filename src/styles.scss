@@ -25,4 +25,8 @@ $my-theme: mat.define-light-theme((
   stroke-dasharray: 5;
   fill-opacity: 0.2;
   fill: orange !important;
+  animation: blink 0.2s;
+  animation-iteration-count: 20;
 }
+
+@keyframes blink { 50% { fill: white; } }
