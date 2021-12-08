@@ -379,20 +379,19 @@ export class DiagramComponent implements AfterContentInit, OnChanges, OnDestroy 
     } else {
       if(oldHilightIds != null) {
         oldHilightIds.forEach(oldHilightId => {
-          canvasCrnt.removeMarker(oldHilightId, DiagramComponent.MARKER_SELECTED);
-          canvasBase.removeMarker(oldHilightId, DiagramComponent.MARKER_SELECTED);
-          canvasCrnt.removeMarker(oldHilightId, DiagramComponent.MARKER_HILIGHT);
-          canvasBase.removeMarker(oldHilightId, DiagramComponent.MARKER_HILIGHT);
+          try { canvasCrnt.removeMarker(oldHilightId, DiagramComponent.MARKER_SELECTED); } catch(e) {}
+          try { canvasBase.removeMarker(oldHilightId, DiagramComponent.MARKER_SELECTED); } catch(e) {}
+          try { canvasCrnt.removeMarker(oldHilightId, DiagramComponent.MARKER_HILIGHT); } catch(e) {}
+          try { canvasBase.removeMarker(oldHilightId, DiagramComponent.MARKER_HILIGHT); } catch(e) {}
         })
       }
       
       if(newValues) {
         newValues.forEach(newvalueItem => {
-
-          canvasCrnt.addMarker(newvalueItem, DiagramComponent.MARKER_SELECTED);
-          canvasBase.addMarker(newvalueItem, DiagramComponent.MARKER_SELECTED);
-          canvasCrnt.addMarker(newvalueItem, DiagramComponent.MARKER_HILIGHT);
-          canvasBase.addMarker(newvalueItem, DiagramComponent.MARKER_HILIGHT);
+          try { canvasCrnt.addMarker(newvalueItem, DiagramComponent.MARKER_SELECTED); } catch(e) {}
+          try { canvasBase.addMarker(newvalueItem, DiagramComponent.MARKER_SELECTED); } catch(e) {}
+          try { canvasCrnt.addMarker(newvalueItem, DiagramComponent.MARKER_HILIGHT); } catch(e) {}
+          try { canvasBase.addMarker(newvalueItem, DiagramComponent.MARKER_HILIGHT); } catch(e) {}
         })
       }
     }
