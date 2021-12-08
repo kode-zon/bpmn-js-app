@@ -28,7 +28,7 @@ import BpmnColorPickerModule from 'bpmn-js-color-picker';
 import BpmnPropertiesPanelModule from 'bpmn-js-properties-panel'
 import BpmnPropertiesProviderModule from 'bpmn-js-properties-panel/lib/provider/bpmn'
 import BpmnTaskResizeableModule from 'bpmn-js-task-resize/lib'
-import BpmnJsCustomRendererModule from 'custom-modules/bpmn-js-custom-renderer'
+//import BpmnJsCustomRendererModule from 'custom-modules/bpmn-js-custom-renderer'
 import { diff } from 'bpmn-js-differ';
 import BpmnModdle from 'bpmn-moddle';
 
@@ -182,7 +182,7 @@ export class DiagramComponent implements AfterContentInit, OnChanges, OnDestroy 
         BpmnPropertiesPanelModule,
         BpmnPropertiesProviderModule,
         BpmnTaskResizeableModule,
-        BpmnJsCustomRendererModule
+        //BpmnJsCustomRendererModule
       ],
       taskResizingEnabled: true,
       eventResizingEnabled: true
