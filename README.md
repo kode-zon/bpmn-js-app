@@ -1,6 +1,7 @@
 # BpmnJsAppV2
 
-This project was generated with [Angular CLI](https://github.com/angular/angular-cli) version 12.0.5.
+This project was generated from [Angular CLI](https://github.com/angular/angular-cli) version 12.0.5.
+and use library from https://www.npmjs.com/package/bpmn-js then implement more feature from example (https://github.com/bpmn-io/bpmn-js-examples) 
 
 ## Development server
 
