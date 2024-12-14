@@ -1,0 +1,21 @@
+{
+  "name": "bpmn-js-app",
+  "version": "3.0.0",
+  "description": "bpmn modeller using library from https://www.npmjs.com/package/bpmn-js",
+  "main": "index.js",
+  "scripts": {
+    "ng": "ng",
+    "start": "ng serve",
+    "build": "ng build",
+    "watch": "ng build --watch --configuration development",
+    "test": "ng test"
+  },
+  "keywords": [
+    "bpmn-modeller"
+  ],
+  "author": "kode-zon",
+  "license": "SEE LICENSE IN LICENSE",
+  "dependencies": {
+    "@angular/cli": "^18.2.12"
+  }
+}
