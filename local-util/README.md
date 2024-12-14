@@ -9,8 +9,20 @@ git log --oneline --graph --pretty=format:"%C(yellow)%h %C(blue)%cI %C(cyan)%cn<
 
 
 ## Use Docker to implement on restricted machines
-### Pull imagee for target node version
+### Pull image for target node version
 choose node:23.4.0-alpine3.21 because no vulnerabilities report yet at this moment
 ```
 docker pull node:23.4.0-alpine3.21
+```
+
+
+### Build and run node playground docker
+```
+./local-util/playground-docker.sh do--run-playground-image
+```
+
+inside playground container execute command
+```
+cd /etc/share/project
+ng new bpmn-js-app
 ```
