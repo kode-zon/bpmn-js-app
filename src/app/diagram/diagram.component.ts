@@ -22,8 +22,8 @@ import { map, switchMap } from 'rxjs/operators';
  * bpmn-modeler - bootstraps a full-fledged BPMN editor
  */
 //import * as BpmnJS from 'bpmn-js/dist/bpmn-modeler.production.min.js';
-import * as BpmnJSModeler from 'bpmn-js/dist/bpmn-modeler.development.js';
-import * as BpmnJSViewer from 'bpmn-js/dist/bpmn-modeler.development.js';
+import BpmnJSModeler from 'bpmn-js/dist/bpmn-modeler.development.js';
+import BpmnJSViewer from 'bpmn-js/dist/bpmn-modeler.development.js';
 import BpmnColorPickerModule from 'bpmn-js-color-picker';
 import BpmnPropertiesPanelModule from 'bpmn-js-properties-panel'
 import BpmnPropertiesProviderModule from 'bpmn-js-properties-panel/lib/provider/bpmn'
@@ -48,6 +48,7 @@ const defaultBlankDiagram = `<?xml version="1.0" encoding="UTF-8"?>
 `;
 @Component({
   selector: 'app-diagram',
+  standalone: false,
   templateUrl: './diagram.component.html',
   styles: [
     `
@@ -461,9 +462,9 @@ export class DiagramComponent implements AfterContentInit, OnChanges, OnDestroy 
 
   ngOnChanges(changes: SimpleChanges) {
     // re-import whenever the url changes
-    if (changes.url) {
-      if(changes.url.currentValue != null) {
-        this.loadUrl(changes.url.currentValue);
+    if (changes['url']) {
+      if(changes['url'].currentValue != null) {
+        this.loadUrl(changes['url'].currentValue);
       } else {
         this.doResetToBlank();
       }

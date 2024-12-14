@@ -8,18 +8,20 @@ import { MatSpinner } from '@angular/material/progress-spinner';
 })
 export class LoadingScreenService {
   private numberOfShowingSprinner = 0;
-  private spinnerTop = this.overlay.create({
-    hasBackdrop: true,
-    backdropClass: 'loading-screen-backdrop',
-    positionStrategy: this.overlay.position()
-      .global()
-      .centerHorizontally()
-      .centerVertically()
-  });
+  private spinnerTop;
 
   constructor(
     private overlay: Overlay,
-  ) { }
+  ) { 
+    this.spinnerTop = this.overlay.create({
+      hasBackdrop: true,
+      backdropClass: 'loading-screen-backdrop',
+      positionStrategy: this.overlay.position()
+        .global()
+        .centerHorizontally()
+        .centerVertically()
+    });
+  }
 
   public showSpinner() {
     console.debug("showSpinner");
