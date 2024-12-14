@@ -14,3 +14,15 @@ choose node:23.4.0-alpine3.21 because no vulnerabilities report yet at this mome
 ```
 docker pull node:23.4.0-alpine3.21
 ```
+
+
+### Build and run node playground docker
+```
+./local-util/playground-docker.sh do--run-playground-image
+```
+
+inside playground container execute command
+```
+cd /etc/share/project
+ng new --no-standalone bpmn-js-app
+```

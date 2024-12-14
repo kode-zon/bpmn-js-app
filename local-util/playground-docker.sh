@@ -35,6 +35,7 @@ do--run-playground-image() {
     fi
 
     docker run --rm -it \
+        -p 4200:4200 \
         -v "$DOCKER_ENTRY_DIR:/etc/share/project/$PROJECT_DIR_NAME:rw" \
         $DOCKER_PLAYGROUND_TAG \
         bash
