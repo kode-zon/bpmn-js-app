@@ -24,5 +24,5 @@ docker pull node:23.4.0-alpine3.21
 inside playground container execute command
 ```
 cd /etc/share/project
-ng new bpmn-js-app
+ng new --no-standalone bpmn-js-app
 ```
