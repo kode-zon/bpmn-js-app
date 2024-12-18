@@ -6,6 +6,9 @@
 /out-tsc
 /bazel-out
 
+# Exclude private content
+**/*.runtime.*
+
 # Node
 /node_modules
 npm-debug.log
