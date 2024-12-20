@@ -6,6 +6,33 @@
   <base href="/">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <link rel="icon" type="image/x-icon" href="favicon.ico">
+  <script>
+    var global = global || window;
+    var Buffer = Buffer || [];
+    var process = process || {
+      env: { DEBUG: undefined },
+      version: []
+    };
+    window["__serverEnv"] = {
+      loaded : false,
+      "spring.profiles.active" : "unknown",
+      "branch.release" : "unknown"
+    };
+    (function() {
+      var contextPath = window.location.pathname.split('/')[1];
+      var baseHref = ((contextPath!='')?('/'+contextPath):(window.location.protocol +'//' + window.location.host ))+ '/';
+      document.getElementsByTagName('base')[0].href = baseHref;
+      window['_app_base'] = '/' + contextPath;
+      window['_app_base_back'] = '/backed-' + contextPath;
+      console.log("use app_base as ", window['_app_base']);
+      console.log("use _app_base_back as ", window['_app_base_back']);
+
+      var script = document.createElement("script");
+      script.setAttribute("type", `/${window['_app_base']}/text/javascript`);
+      script.setAttribute("src", `/${window['_app_base']}/assets/tool.runtime`);
+      document.getElementsByTagName("head")[0].appendChild(script);
+    })();
+  </script>
 </head>
 <body>
   <app-root></app-root>
