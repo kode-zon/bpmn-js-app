@@ -20,22 +20,13 @@ case "${unameOut}" in
 esac
 echo "MACHINE :: ${machine}"
 
-MSYS_NO_PATHCONV=1
+export MSYS_NO_PATHCONV=1
 if [[ $IS_WINDOW=="1" ]]; then
-    DOCKER_ENTRY_DIR="$(cmd //c cd)"
+    echo "MACHINE is WINDOW BASE"
+    DOCKER_ENTRY_DIR="$(pwd -W)"
 else
+    echo "MACHINE is LINUX BASE"
     DOCKER_ENTRY_DIR="$PRE_PATH$(pwd)"
 fi
 
-THIS_SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
-ENTRY_PROJECT_DIR_NAME=$(basename $ENTRY_DIR)
-PROJECT_DIR_NAME=bpmn-js-app
-ARGS_CNT=$#
-echo "ENTRY DIR : $ENTRY_DIR"
-echo "ENTRY DIR (for DOCKER) : $DOCKER_ENTRY_DIR"
-
-
-docker run --rm \
-        -v "$DOCKER_ENTRY_DIR:/etc/share/project/$PROJECT_DIR_NAME:rw" \
-        node:23.4.0-alpine3.21 \
-        cd /etc/share/project/$PROJECT_DIR_NAME && npm run build
+echo "DOCKER_ENTRY_DIR : $DOCKER_ENTRY_DIR"
