@@ -1,0 +1,65 @@
+<div class="d-flex flex-column h-100">
+
+    <div class="d-flex flex-column flex-grow-1 overflow-auto">
+        <ng-container *ngFor="let cfgItem of repoConfigs; let idx=index;">
+            <div class="row">
+                <div class="col-4">
+                    <div class="d-flex flex-row">
+                        <mat-label>Domain:</mat-label>
+                        <input matInput [(ngModel)]="cfgItem.domain">
+                    </div>
+                </div>
+                <div class="col-2">
+                    <div class="d-flex flex-row">
+                        <mat-label>Authen type:</mat-label>
+                        <mat-select [(ngModel)]="cfgItem.authType">
+                            <mat-option [value]="'Bearer'">Bearer token</mat-option>
+                            <mat-option [value]="'Basic'">Basic Authen</mat-option>
+                        </mat-select>
+                    </div>
+                </div>
+                <div class="col-4">
+                    <ng-container *ngIf="(cfgItem.authType=='Bearer')">
+                        <div class="d-flex flex-row">
+                            <mat-label>Bearier:</mat-label>
+                            <input [type]="(cfgItem.hideSecrets)? 'password' : 'text'">
+                            <mat-icon (click)="cfgItem.hideSecrets=!(cfgItem.hideSecrets)">
+                                {{ (cfgItem.hideSecrets) ? 'visibility_off' : 'visibility'}}
+                            </mat-icon>
+                        </div>
+                    </ng-container>
+                    <ng-container *ngIf="(cfgItem.authType=='Basic')">
+                        <div>
+                            <div class="d-flex flex-row">
+                                <mat-label>User:</mat-label>
+                                <input matInput [(ngModel)]="cfgItem.user">
+                            </div>
+                            
+                            
+                            <div class="d-flex flex-row">
+                                <mat-label>Password:</mat-label>
+                                <input type="password" matInput [(ngModel)]="cfgItem.pass">
+                            </div>
+                        </div>
+                    </ng-container>
+                </div>
+                <div class="col-1">
+                    <button mat-raised-button color="primary" (click)="repoConfigs.splice(idx, 1)" title="delete">delete</button>
+                </div>
+            </div>
+        </ng-container>
+    </div>
+
+    <div class="d-flex justify-content-center btn-group">
+        <button mat-raised-button color="primary" (click)="addItem()" title="add item"><mat-icon>add</mat-icon></button>
+    </div>
+    <div class="d-flex justify-content-center btn-group">
+        <button mat-raised-button color="primary" (click)="emitActionEvent('apply')" title="add item">apply</button>
+        <button mat-raised-button color="primary" (click)="emitActionEvent('cancel')" title="add item">cancel</button>
+    </div>
+    
+</div>
+
+
+
+

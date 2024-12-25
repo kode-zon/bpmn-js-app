@@ -1,6 +1,15 @@
-<div class="diagram-parent">
-  <app-diagram [url]="null" (importDone)="handleImported($event)"></app-diagram>
-
+<div class="app-area diagram-parent">
+  <div class="diagram-area">
+    <app-diagram [url]="null" (importDone)="handleImported($event)"></app-diagram>
+  </div>
+  <div class="d-flex" *sysHidden>
+    <div class="mr-auto p-2 bd-highlight">buildInfo.systemName</div>
+    <div class="p-2 bd-highlight">
+      branchName : {{ buildInfo.branchName }}
+      revision : {{ buildInfo.revisionShort }}
+    </div>
+  </div>
+  
   <div class="import-error" *ngIf="importError">
     <strong>Failed to render diagram: </strong>
     {{ importError.message }}

@@ -1,8 +1,33 @@
-.diagram-parent {
-  --height: 400px;
-  height: calc(100vh - 30px);
+.app-area {
+  display: flex;
+  flex-direction: column;
+  height: calc(100vh);
+  position: relative;
+}
+
+.diagram-area {
+  height: 100%;
   border: solid 3px #EEE;
   position: relative;
+}
+
+.white-icon {
+  color: white;
+  svg {
+    fill: white;
+  }
+}
+.darkblue-icon {
+  color: darkblue;
+  svg {
+    fill: darkblue;
+  }
+}
+.darkcyan-icon {
+  color: darkcyan;
+  svg {
+    fill: darkcyan;
+  }
 }
 
 .import-error {
@@ -12,4 +37,14 @@
   position: absolute;
   top: 0;
   left: 0;
+}
+
+::ng-deep {
+  .cdk-overlay-container {
+    z-index: 21000 !important
+  }
+
+  .mat-mdc-button-touch-target {
+    height: inherit !important;
+  }
 }

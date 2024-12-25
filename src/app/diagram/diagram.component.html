@@ -10,11 +10,12 @@
     <div #diagramRef class="{{ baseCompareEnabled?'w-50':'w-100' }} h-100" style="position: relative;">
         <div #propPanelRef class="propPanel {{ baseCompareEnabled?'hide':'visible' }}"></div>
         <div class="btn-group btn-group-01" role="group">
+            <button mat-raised-button color="primary" (click)="doToggleMenuBar()" title="create new"><mat-icon>menu</mat-icon></button>
             <button mat-raised-button color="primary" (click)="doResetToBlank()" title="create new"><mat-icon>note_add</mat-icon></button>
-            <button mat-raised-button color="primary" (click)="doLoad()" title="load existing file"><mat-icon>folder_open</mat-icon></button>
+            <button mat-raised-button color="primary" (click)="doLoad()" title="open from local"><mat-icon>folder_open</mat-icon></button>
             <div class="px-1"></div>
             <button mat-raised-button color="primary" (click)="doSaveToServer()" title="save to cloud"><mat-icon>cloud_upload</mat-icon></button>
-            <button mat-raised-button color="primary" (click)="doSaveAsFile()" title="save to local"><mat-icon>cloud_download</mat-icon></button>
+            <button mat-raised-button color="primary" (click)="doLoadFromCloud()" title="open from cloud"><mat-icon>cloud_download</mat-icon></button>
             <div class="px-1"></div>
             <button mat-raised-button color="primary" (click)="doToggleCompareBase()" title="toggle compare mode"><mat-icon>compare</mat-icon></button>
         </div>
@@ -48,6 +49,6 @@
         <div (click)="doToggleListOfChangedElements()">list of changed elements</div>
     </div>
 </div>
-
+<!-- 
 <input [(ngModel)]="filename" (blur)="validateFileName()" type="text"><button (click)="doSaveAsFile()">save</button>
-<input [(ngModel)]="searchText" type="text"><button (click)="doSearch()">search</button>
+<input [(ngModel)]="searchText" type="text"><button (click)="doSearch()">search</button> -->

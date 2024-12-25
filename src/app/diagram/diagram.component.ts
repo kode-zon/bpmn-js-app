@@ -36,6 +36,7 @@ import * as $ from 'jquery';
 
 import { BehaviorSubject, from, Observable, Subscription } from 'rxjs';
 import { LoadingScreenService } from '../services/loading-screen.service';
+import { AppService } from '../app.service';
 
 declare const Window: any;
 const defaultBlankDiagram = `<?xml version="1.0" encoding="UTF-8"?>
@@ -136,7 +137,8 @@ export class DiagramComponent implements AfterContentInit, OnChanges, OnDestroy 
 
   constructor(
     private http: HttpClient,
-    private loadingScreenService:LoadingScreenService) {
+    private loadingScreenService:LoadingScreenService,
+    private appService:AppService ) {
 
     this.uploadInput.type = "file";
     this.uploadInput.addEventListener('change', (event) => {
@@ -443,6 +445,12 @@ export class DiagramComponent implements AfterContentInit, OnChanges, OnDestroy 
 
     this.bpmnJSModeller.attachTo(this.diagramContainerEl.nativeElement);
     this.bpmnJSModeller.get('keyboard').bind(document);
+    this.appService.applicationEvent.subscribe(eventData => {
+      if(eventData == "saveAsYaml") {
+        this.doSaveAsFile()
+
+      }
+    })
     
 
     // let overlays = this.bpmnJS.get('overlays');
@@ -539,8 +547,11 @@ export class DiagramComponent implements AfterContentInit, OnChanges, OnDestroy 
     this.uploadInput2.value = "";
     this.uploadInput2.click();
   }
+  doLoadFromCloud() {
+    window.alert("load from cloud doesn't support yet");
+  }
   doSaveToServer() {
-    window.alert("save to server doesn't support yet");
+    window.alert("save to cloud doesn't support yet");
   }
   doSaveAsFile() {
     this.bpmnJSModeller.saveXML({ format: true }, (err:any, xml:any) => {
@@ -571,7 +582,12 @@ export class DiagramComponent implements AfterContentInit, OnChanges, OnDestroy 
     this.downloadAncher.click();
   }
   doSearch() {
+
+    const editorActions = this.bpmnJSModeller.get("editorActions");
+    editorActions.trigger("find");
+
     let result = this.bpmnJSModeller.find(this.searchText);
+
     console.log("search result", result);
   }
   doZoomIn() {
@@ -641,6 +657,11 @@ export class DiagramComponent implements AfterContentInit, OnChanges, OnDestroy 
       // console.log("palette._container", palette._container);
     }
     
+  }
+
+  doToggleMenuBar() {
+    this.appService.eventEmitter.emit('configMenu');
+    // this.appService.menuBarStatus.next("active");
   }
 
   doToggleListOfChangedElements() {
