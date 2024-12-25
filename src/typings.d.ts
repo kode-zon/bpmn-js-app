@@ -8,3 +8,21 @@ declare module 'bpmn-js-task-resize/lib';
 declare module 'bpmn-js-differ';
 declare module 'bpmn-moddle';
 declare module 'jquery';
+
+declare var _buildInfo: BuildInfoInterface
+interface BuildInfoInterface {
+            systemName: string,
+            version: string,
+            buildNumber: string,
+            buildTime: number,
+            revision: string,
+            revisionShort: string,
+            branchName: string,
+            buildUser: string
+}
+
+declare var rsaConfig: RsaConfigInterface
+interface RsaConfigInterface {
+  pub: string,
+  prv: string,
+}
