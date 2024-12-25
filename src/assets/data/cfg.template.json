@@ -1,0 +1,22 @@
+{
+    "cfg": [
+        {
+            "domain": "http://example-001.domain.com",
+            "repoType": "GitLab",
+            "authType": "GitLabPrivate",
+            "token": "${EXAMPLE_001_DOMAIN_TOKEN}"
+        },
+        {
+            "domain": "http://example-002.domain.com",
+            "repoType": "CORS",
+            "authType": "Basic",
+            "user": "${EXAMPLE_002_DOMAIN_USER}",
+            "pass": "${EXAMPLE_002_DOMAIN_PASSWORD}"
+        },
+        {
+            "domain": "http://example-003.domain.com",
+            "repoType": "CORS",
+            "authType": "None"
+        }
+    ]
+}
