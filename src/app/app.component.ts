@@ -5,6 +5,7 @@ import { MatDialog } from '@angular/material/dialog';
 import { ConfigComponent } from './components/config/config.component';
 import { HttpClient } from '@angular/common/http';
 import JSEncrypt from 'jsencrypt';
+import CryptoJs from 'crypto-js';
 
 @Component({
   selector: 'app-root',
@@ -97,6 +98,8 @@ export class AppComponent implements OnInit {
 
   private doInitialize() {
 
+    
+    // load deployment config
     this.httpClient.get("assets/data/deployment.runtime.json").subscribe(res => {
 
       AppService.deployment_runtime_data=((typeof res == "string")?JSON.parse(res):res);
@@ -114,8 +117,26 @@ export class AppComponent implements OnInit {
   }
 
   private initializeRuntimeConfig(jsEncryptObj_enc:JSEncrypt, jsEncryptObj_dec:JSEncrypt) {
-    let runtime_cfg_content = jsEncryptObj_dec.decrypt(AppService.deployment_runtime_data.runtime_cfg_content)
-    AppService.config_runtime_data = JSON.parse(runtime_cfg_content as string);
+    if(AppService.deployment_runtime_data?.RUNTIME_CFG_CONTENT) {
+      let runtime_cfg_content = jsEncryptObj_dec.decrypt(AppService.deployment_runtime_data.RUNTIME_CFG_CONTENT)
+
+      if(runtime_cfg_content) {
+        let [aes_hex_k, aes_hex_iv] = runtime_cfg_content.split(":");
+        this.httpClient.get("assets/data/cfg.runtime.enc-b64", {responseType: 'text'}).subscribe(res => {
+          let decryptedContent = CryptoJS.AES.decrypt(
+                res, 
+                CryptoJS.enc.Hex.parse(aes_hex_k), 
+                { 
+                    iv: CryptoJS.enc.Hex.parse(aes_hex_iv), 
+                    mode: CryptoJS.mode.CBC, 
+                    padding: CryptoJS.pad.Pkcs7 
+                })
+                .toString(CryptoJS.enc.Utf8)
+
+          AppService.config_runtime_data = JSON.parse(decryptedContent);
+        })
+      }
+    }
   }
 
 }

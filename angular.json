@@ -54,7 +54,9 @@
               "node_modules/material-design-icons/iconfont/material-icons.css",
               "src/styles.scss"
             ],
-            "scripts": []
+            "scripts": [
+              "node_modules/crypto-js/crypto-js.js"
+            ]
           },
           "configurations": {
             "production": {
@@ -68,7 +70,7 @@
                 {
                   "type": "initial",
                   "maximumWarning": "1.5MB",
-                  "maximumError": "2MB"
+                  "maximumError": "5MB"
                 },
                 {
                   "type": "anyComponentStyle",

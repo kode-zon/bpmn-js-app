@@ -203,12 +203,16 @@ if(!fs.existsSync('private.runtime.env')) {
 if(openssl_available) {
 
   // Generate Key&IV
-  exec.execSync('openssl rand -hex 32 > "/tmp/aes256-cbc.k-hex.runtime.txt"')
-  exec.execSync('openssl rand -hex 32 > "/tmp/aes256-cbc.iv-hex.runtime.txt"')
+  // exec.execSync('openssl rand -hex 64 | tr -d "\n" | cut -c0-64 > "/tmp/aes256-cbc.k-hex.runtime.txt"')
+  // exec.execSync('openssl rand -hex 32 | tr -d "\n" | cut -c0-32 > "/tmp/aes256-cbc.iv-hex.runtime.txt"')
+  exec.execSync('printf "123456789A123456789B123456789C123456789D123456789E123456789F1234" > "/tmp/aes256-cbc.k-hex.runtime.txt"')
+  exec.execSync('printf "123456789A123456789B123456789C12"                                 > "/tmp/aes256-cbc.iv-hex.runtime.txt"')
   // Store Key&IV to credential-content
-  exec.execSync('cat "/tmp/aes256-cbc.k-hex.runtime.txt" > "/tmp/credential.runtime.content"')
-  exec.execSync('echo ":" >> "/tmp/credential.runtime.content"')
-  exec.execSync('cat "/tmp/aes256-cbc.iv-hex.runtime.txt" >> "/tmp/credential.runtime.content"')
+  exec.execSync(`
+    aes_cbc_key=$(cat "/tmp/aes256-cbc.k-hex.runtime.txt") && \\
+    aes_cbc_iv=$(cat "/tmp/aes256-cbc.iv-hex.runtime.txt") && \\
+    printf "$aes_cbc_key:$aes_cbc_iv" > "/tmp/credential.runtime.content"
+  `)
 
 
   // Generate asymetric private key
@@ -227,7 +231,7 @@ if(openssl_available) {
   exec.execSync(`
     aes_cbc_key=$(cat "/tmp/aes256-cbc.k-hex.runtime.txt") && \\
     aes_cbc_iv=$(cat "/tmp/aes256-cbc.iv-hex.runtime.txt") && \\
-    openssl enc -aes-256-cbc -nosalt -e \\
+    openssl enc -aes-256-cbc -salt -e \\
       -in "/tmp/cfg.runtime.json" -out "/tmp/cfg.runtime.json.aes-enc" \\
       -K "$aes_cbc_key" -iv "$aes_cbc_iv"
   `)
@@ -235,7 +239,7 @@ if(openssl_available) {
   exec.execSync(`
     aes_cbc_key=$(cat "/tmp/aes256-cbc.k-hex.runtime.txt") && \\
     aes_cbc_iv=$(cat "/tmp/aes256-cbc.iv-hex.runtime.txt") && \\
-    openssl enc -aes-256-cbc -nosalt -d \\
+    openssl enc -aes-256-cbc -salt -d \\
       -in "/tmp/cfg.runtime.json.aes-enc" \\
       -K "$aes_cbc_key" -iv "$aes_cbc_iv" > "/tmp/cfg.runtime.json.aes-dec"
   `)
@@ -285,7 +289,7 @@ module.exports.output = {
 }
 module.exports.plugins = [
     new webpack.DefinePlugin({
-        'buildInfo': JSON.stringify({
+        '_buildInfo': JSON.stringify({
                         systemName: pkgData.name,
                         version: pkgData.version,
                         buildNumber: buildNumber,
