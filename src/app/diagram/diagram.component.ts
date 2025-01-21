@@ -547,8 +547,12 @@ export class DiagramComponent implements AfterContentInit, OnChanges, OnDestroy 
     this.uploadInput2.value = "";
     this.uploadInput2.click();
   }
+  doLoadBaseCloud() {
+    window.alert("load from cloud doesn't support yet");
+  }
   doLoadFromCloud() {
     window.alert("load from cloud doesn't support yet");
+    this.appService.eventEmitter.emit('loadFromCloud');
   }
   doSaveToServer() {
     window.alert("save to cloud doesn't support yet");
