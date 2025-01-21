@@ -1,28 +1,29 @@
 <div class="d-flex flex-column h-100">
 
-    <div class="d-flex flex-column flex-grow-1 overflow-auto">
+    <div class="d-flex flex-column flex-grow-1 overflow-auto gap-2">
         <ng-container *ngFor="let cfgItem of repoConfigs; let idx=index;">
-            <div class="row">
+            <div class="row item-panel">
                 <div class="col-4">
                     <div class="d-flex flex-row">
-                        <mat-label>Domain:</mat-label>
-                        <input matInput [(ngModel)]="cfgItem.domain">
+                        <mat-label class="flex-nowrap text-nowrap">Domain:</mat-label>
+                        <input class="flex-grow-1" matInput [(ngModel)]="cfgItem.domain">
                     </div>
                 </div>
                 <div class="col-2">
                     <div class="d-flex flex-row">
-                        <mat-label>Authen type:</mat-label>
-                        <mat-select [(ngModel)]="cfgItem.authType">
+                        <mat-label class="flex-nowrap text-nowrap">Authen type:</mat-label>
+                        <mat-select class="flex-grow-1" [(ngModel)]="cfgItem.authType">
                             <mat-option [value]="'Bearer'">Bearer token</mat-option>
                             <mat-option [value]="'Basic'">Basic Authen</mat-option>
+                            <mat-option [value]="'GitLabPrivate'">GitLab Private token</mat-option>
                         </mat-select>
                     </div>
                 </div>
                 <div class="col-4">
-                    <ng-container *ngIf="(cfgItem.authType=='Bearer')">
+                    <ng-container *ngIf="(cfgItem.authType=='Bearer' || cfgItem.authType=='GitLabPrivate')">
                         <div class="d-flex flex-row">
-                            <mat-label>Bearier:</mat-label>
-                            <input [type]="(cfgItem.hideSecrets)? 'password' : 'text'">
+                            <mat-label class="flex-nowrap text-nowrap">Token:</mat-label>
+                            <input class="flex-grow-1" [type]="(cfgItem.hideSecrets)?'password':'text'" matInput [(ngModel)]="cfgItem.token">
                             <mat-icon (click)="cfgItem.hideSecrets=!(cfgItem.hideSecrets)">
                                 {{ (cfgItem.hideSecrets) ? 'visibility_off' : 'visibility'}}
                             </mat-icon>
@@ -31,14 +32,14 @@
                     <ng-container *ngIf="(cfgItem.authType=='Basic')">
                         <div>
                             <div class="d-flex flex-row">
-                                <mat-label>User:</mat-label>
-                                <input matInput [(ngModel)]="cfgItem.user">
+                                <mat-label class="flex-nowrap text-nowrap">User:</mat-label>
+                                <input class="flex-grow-1" matInput [(ngModel)]="cfgItem.user">
                             </div>
                             
                             
                             <div class="d-flex flex-row">
-                                <mat-label>Password:</mat-label>
-                                <input type="password" matInput [(ngModel)]="cfgItem.pass">
+                                <mat-label class="flex-nowrap text-nowrap">Password:</mat-label>
+                                <input class="flex-grow-1" type="password" matInput [(ngModel)]="cfgItem.pass">
                             </div>
                         </div>
                     </ng-container>

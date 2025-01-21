@@ -1,4 +1,5 @@
 import { Component, EventEmitter, Output } from '@angular/core';
+import { AppService } from '../../app.service';
 
 @Component({
   selector: 'app-config',
@@ -9,7 +10,6 @@ import { Component, EventEmitter, Output } from '@angular/core';
 })
 export class ConfigComponent {
 
-  repoConfigs:RepoConfig[] = []
 
   @Output() event = new EventEmitter<string>();
 
@@ -17,8 +17,19 @@ export class ConfigComponent {
   constructor() {
   }
 
+  get config_runtime_data() {
+    return AppService.config_runtime_data;
+  }
+
   addItem() {
     this.repoConfigs.push({ authType: "Bearer" ,hideSecrets: true })
+  }
+
+  get repoConfigs() {
+    return AppService.repoConfigs
+  }
+  set repoConfigs(value) {
+    AppService.repoConfigs = value;
   }
 
   emitActionEvent(name:string) {

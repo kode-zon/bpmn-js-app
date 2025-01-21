@@ -47,24 +47,10 @@ export class AppComponent implements OnInit {
     console.log('AppComponent loaded');
 
     this.appService.eventEmitter.asObservable().subscribe(eventName => {
-      const dialogRef = this.dialog.open(ConfigComponent, {
-        width: '90%', height: '70%',
-        disableClose: true
-      })
+
+      if(eventName=="configMenu") this.doConfigDialogOpen()
 
       
-      dialogRef.componentInstance.event.asObservable().subscribe(val => {
-        dialogRef.close();
-        if(val=='apply') {
-          console.debug('config dialog apply')
-        }
-        if(val=='cancel') {
-          console.debug('config dialog cancel')
-        }
-      })
-      dialogRef.afterClosed().subscribe(result => {
-        console.debug("dialog")
-      })
     })
 
     // this.appService.menuBarStatus.subscribe(value => {
@@ -134,9 +120,36 @@ export class AppComponent implements OnInit {
                 .toString(CryptoJS.enc.Utf8)
 
           AppService.config_runtime_data = JSON.parse(decryptedContent);
+
+          if(Array.isArray(AppService.config_runtime_data?.repoConfigs)) {
+            for(let item of AppService.config_runtime_data?.repoConfigs) {
+              AppService.repoConfigs.push({ ...item, hideSecrets: true })
+            }
+          }
         })
       }
     }
+  }
+
+  private doConfigDialogOpen() {
+    const dialogRef = this.dialog.open(ConfigComponent, {
+      width: '90%', height: '70%',
+      disableClose: true
+    })
+
+    
+    dialogRef.componentInstance.event.asObservable().subscribe(val => {
+      dialogRef.close();
+      if(val=='apply') {
+        console.debug('config dialog apply')
+      }
+      if(val=='cancel') {
+        console.debug('config dialog cancel')
+      }
+    })
+    dialogRef.afterClosed().subscribe(result => {
+      console.debug("dialog")
+    })
   }
 
 }
