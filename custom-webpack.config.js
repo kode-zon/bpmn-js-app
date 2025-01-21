@@ -12,9 +12,14 @@ let timer__done_webpack = new Date();
 
 const mainProcess = process;
 
+
+console.log(`delete "*.runtime.*" under "/tmp"`)
+exec.execSync(`find /tmp -name "*.runtime.*" -exec rm {} ;`)
+console.log(`delete "*.runtime.*" under "src/assets"`)
+exec.execSync(`find src/assets -name "*.runtime.*" -exec rm {} ;`)
+
+
 let devServerExport = {}
-
-
 
 devServerExport = {
   ...devServerExport,
@@ -194,9 +199,10 @@ try {
 
 if(!fs.existsSync('private.runtime.env')) {
   fs.writeFileSync('private.runtime.env', `
-    PRIVATE_CREDENTIAL_001=example credential 001
-    PRIVATE_CREDENTIAL_002=example credential 002
-  `);
+# token from https://repo-example.gitlab.com/-/user_settings/personal_access_tokens
+export EXAMPLE_SITE_001_DOMAIN="https://repo-example.gitlab.com
+export EXAMPLE_SITE_001_TOKEN="gitlab-private-token"
+`);
   console.warn('please update [private.runtime.env] before build to encrypt your credential before publish.')
 }
 
@@ -226,7 +232,11 @@ if(openssl_available) {
   
   
   // Create config-content from template and fill with ENV-VAR 
-  exec.execSync(`envsubst < "src/assets/data/cfg.template.json" > "/tmp/cfg.runtime.json"`)
+  console.warn('credential in file [private.runtime.env] will use for fill in to [src/assets/data/cfg.template.json] as runtime file output.')
+  exec.execSync(`
+    source "private.runtime.env" && \\
+    envsubst < "src/assets/data/cfg.template.json" > "/tmp/cfg.runtime.json"
+  `)
   // Encrypt config-content using aes256-cbc
   exec.execSync(`
     aes_cbc_key=$(cat "/tmp/aes256-cbc.k-hex.runtime.txt") && \\
@@ -273,6 +283,7 @@ deploymentInfoData = deploymentInfoData.replace(regexp__env_deploy_release, proc
 deploymentInfoData = deploymentInfoData.replace(regexp__env_cfg_revision, process.env['DEPLOYMENT_CFG_REVISION']??'n/a')
 deploymentInfoData = deploymentInfoData.replace(regexp__env_serv_env_name, process.env['ENV_CODE_NAME']??'n/a')
 deploymentInfoData = deploymentInfoData.replace(regexp__rsa_enc_b64, rsa_enc_b64__text??'')
+console.log(`generate "deployment.runtime.json" under "src/assets"`)
 fs.writeFileSync('src/assets/data/deployment.runtime.json', deploymentInfoData, 'utf-8');
 console.info(`╰─────────< auto generate file :: deployment.runtime.json >─────────╯`);
 

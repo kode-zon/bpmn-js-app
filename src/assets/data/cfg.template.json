@@ -1,5 +1,5 @@
 {
-    "cfg": [
+    "repoConfigs": [
         {
             "domain": "http://example-001.domain.com",
             "repoType": "GitLab",
@@ -17,6 +17,12 @@
             "domain": "http://example-003.domain.com",
             "repoType": "CORS",
             "authType": "None"
+        },
+        {
+            "domain": "${GITLAB_SITE_001_DOMAIN}",
+            "repoType": "GitLab",
+            "authType": "GitLabPrivate",
+            "token": "${GITLAB_SITE_001_TOKEN}"
         }
     ]
 }
