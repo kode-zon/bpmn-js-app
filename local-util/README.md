@@ -6,6 +6,11 @@ to see git log graph in pretty format
 git log --oneline --graph --pretty=format:"%C(yellow)%h %C(blue)%cI %C(cyan)%cn<%ce>%Creset%x09%s"
 ```
 
+## Push by ignore certificate problem
+```
+git -c http.sslVerify=false push
+```
+
 
 
 ## Use Docker to implement on restricted machines
