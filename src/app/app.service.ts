@@ -13,8 +13,13 @@ export class AppService {
 
   public eventEmitter:EventEmitter<string> = new EventEmitter();
   public sysHiddenFlag:BehaviorSubject<boolean> = new BehaviorSubject(false);
-  public applicationEvent:BehaviorSubject<string> = new BehaviorSubject<string>("");
+  public applicationEvent:BehaviorSubject<ApplicationEvent> = new BehaviorSubject<ApplicationEvent>({ eventName:"" });
   
 
   constructor() { }
+}
+
+export type ApplicationEvent = {
+  eventName: string,
+  args?: any
 }

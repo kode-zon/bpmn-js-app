@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { Overlay } from '@angular/cdk/overlay';
 import { ComponentPortal } from '@angular/cdk/portal';
-import { MatSpinner } from '@angular/material/progress-spinner';
+import { MatProgressSpinner, MatSpinner } from '@angular/material/progress-spinner';
 
 @Injectable({
   providedIn: 'root'
@@ -26,7 +26,7 @@ export class LoadingScreenService {
   public showSpinner() {
     console.debug("showSpinner");
     if (this.numberOfShowingSprinner === 0) {
-      this.spinnerTop.attach(new ComponentPortal(MatSpinner));
+      this.spinnerTop.attach(new ComponentPortal(MatProgressSpinner));
     }
 
     this.numberOfShowingSprinner++;

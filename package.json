@@ -24,7 +24,7 @@
     "@angular/router": "^19.0.0",
     "@types/crypto-js": "^4.2.2",
     "bootstrap": "^5.3.3",
-    "bpmn-js": "^8.8.2",
+    "bpmn-js": "^18.1.2",
     "bpmn-js-color-picker": "^0.4.0",
     "bpmn-js-differ": "^2.0.2",
     "bpmn-js-properties-panel": "^0.46.0",

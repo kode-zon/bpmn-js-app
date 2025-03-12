@@ -62,6 +62,12 @@ const defaultBlankDiagram = `<?xml version="1.0" encoding="UTF-8"?>
         top: 0px;
         right: 0px;
         z-index: 20000;
+      } 
+      .btn-group-00 {
+        position: absolute;
+        top: 1rem;
+        left: 10rem;
+        z-index: 20000;
       }
       .btn-group-01 {
         position: absolute;
@@ -105,7 +111,8 @@ const defaultBlankDiagram = `<?xml version="1.0" encoding="UTF-8"?>
         border: 1px solid black;
       }
     `
-  ]
+  ],
+  styleUrls:['./bpmn-js.scss']
 })
 export class DiagramComponent implements AfterContentInit, OnChanges, OnDestroy {
   private bpmnJSModeller: any;
@@ -250,6 +257,28 @@ export class DiagramComponent implements AfterContentInit, OnChanges, OnDestroy 
       } else {
         console.error(result.error);
       }
+      let elementRegistryModeler = this.bpmnJSModeller.get("elementRegistry");
+      elementRegistryModeler.getAll().forEach((elementItem:any) => {
+        // if(elementItem.type === "bpmn:SubProcess") {
+        //   let deepLinkElm=document.createElement("button");
+        //   let bpmnCanvas=this.bpmnJSModeller.get('canvas');
+        //   if(bpmnCanvas.findRoot) {
+        //     let rootElm = bpmnCanvas.findRoot(elementItem);
+        //     deepLinkElm.setAttribute('title',elementItem.businessObject.name);
+        //     deepLinkElm.onclick = (e) => {
+        //       this.bpmnJSModeller.get('canvas').setRootElement(rootElm);
+        //     }
+        //   }
+        //   this.bpmnJSBaseVerViewer.add(`deeplink_${elementItem.id}`, {
+        //     position: {
+        //       x: elementItem.x + elementItem.width,
+        //       y: elementItem.y + elementItem.height
+        //     },
+        //     html: deepLinkElm
+        //   })
+        //   elementItem.isExpanded = false;
+        // }
+      });
       this.loadingScreenService.stopSpinner();
     });
 
@@ -444,11 +473,21 @@ export class DiagramComponent implements AfterContentInit, OnChanges, OnDestroy 
   ngAfterContentInit(): void {
 
     this.bpmnJSModeller.attachTo(this.diagramContainerEl.nativeElement);
-    this.bpmnJSModeller.get('keyboard').bind(document);
+    //this.bpmnJSModeller.get('keyboard').bind(document);
     this.appService.applicationEvent.subscribe(eventData => {
-      if(eventData == "saveAsYaml") {
+      if(eventData.eventName == "saveAsYaml") {
         this.doSaveAsFile()
-
+      } else 
+      if(eventData.eventName == "loadFromUri") {
+        if(eventData.args?.objectURL) {
+          console.log(`load file from URI`)
+          const reader = new FileReader();
+          reader.onload = (event) => {
+            let xml = event.target?.result;
+            this.importDiagram(xml as string)
+          }
+          reader.readAsText(eventData.args?.objectURL);
+        }
       }
     })
     
@@ -661,6 +700,12 @@ export class DiagramComponent implements AfterContentInit, OnChanges, OnDestroy 
       // console.log("palette._container", palette._container);
     }
     
+  }
+
+  doJumpToRoot() {
+    let canvasRoot=this.bpmnJSModeller.get('canvas').findRoot()
+    console.log("canvasRoot : ", canvasRoot);
+    this.bpmnJSModeller.get('canvas').setRootElement(null);
   }
 
   doToggleMenuBar() {
